@@ -1,13 +1,22 @@
 import path from "path";
-import { createServer } from "http";
+import fs from "fs";
+import { createServer } from "https";
 
 import express from "express";
 import { Server, Socket } from "socket.io";
 
 import { Data, DataStatus, RequestType } from "./types";
 
-const frontRequestsAuthorized: RequestType[] = ["get"];
-const backRequestsAuthorized: RequestType[] = ["update", "delete"];
+const frontRequestsAuthorized: RequestType[] = [
+  "get",
+  "mediaStreamOffer",
+  "mediaStreamIce",
+];
+const backRequestsAuthorized: RequestType[] = [
+  "update",
+  "delete",
+  "mediaStreamAnswer",
+];
 
 let list: Data[] = [
   { name: "Eleonore", status: "None" },
@@ -16,7 +25,13 @@ let list: Data[] = [
 ];
 
 const app = express();
-const server = createServer(app);
+const server = createServer(
+  {
+    cert: fs.readFileSync("./ssl/cert.pem"),
+    key: fs.readFileSync("./ssl/key.pem"),
+  },
+  app
+);
 const io = new Server(server);
 
 let frontApps: Socket[] = [];
@@ -112,7 +127,105 @@ function welcomeNewClient(socket: Socket) {
       io.emit("list", list);
     } else socket.emit("delete", "error");
   });
+
+  socket.on(
+    "mediaStreamOffer",
+    (webRtcSessionDescription: RTCSessionDescriptionInit) => {
+      if (!isAuthorized(socket, "mediaStreamOffer")) {
+        console.error(
+          `${socket.handshake.query.clientType}:${socket.id} is not allowed to mediaStreamOffer`
+        );
+        return;
+      }
+
+      console.log(
+        "New rtc offer received from client:",
+        webRtcSessionDescription.type
+      );
+      console.log(
+        "New rtc offer received from client:",
+        webRtcSessionDescription.sdp
+      );
+
+      // To all backend ?
+      const backendSocket = backApps.at(0);
+      if (backendSocket)
+        backendSocket.emit("mediaStreamOffer", webRtcSessionDescription);
+    }
+  );
+
+  socket.on(
+    "mediaStreamAnswer",
+    (webRtcSessionDescription: RTCSessionDescriptionInit) => {
+      if (!isAuthorized(socket, "mediaStreamAnswer")) {
+        console.error(
+          `${socket.handshake.query.clientType}:${socket.id} is not allowed to mediaStreamAnswer`
+        );
+        return;
+      }
+
+      console.log(
+        "New rtc answer received from client:",
+        webRtcSessionDescription.type
+      );
+      console.log(
+        "New rtc answer received from client:",
+        webRtcSessionDescription.sdp
+      );
+
+      // To all backend ?
+      const frontendSocket = frontApps.at(0);
+      if (frontendSocket)
+        frontendSocket.emit("mediaStreamAnswer", webRtcSessionDescription);
+    }
+  );
+
+  socket.on(
+    "mediaStreamAnswer",
+    (webRtcSessionDescription: RTCSessionDescriptionInit) => {
+      if (!isAuthorized(socket, "mediaStreamAnswer")) {
+        console.error(
+          `${socket.handshake.query.clientType}:${socket.id} is not allowed to mediaStreamAnswer`
+        );
+        return;
+      }
+
+      console.log(
+        "New rtc answer received from client:",
+        webRtcSessionDescription.type
+      );
+      console.log(
+        "New rtc answer received from client:",
+        webRtcSessionDescription.sdp
+      );
+
+      // To all backend ?
+      const frontendSocket = frontApps.at(0);
+      if (frontendSocket)
+        frontendSocket.emit("mediaStreamAnswer", webRtcSessionDescription);
+    }
+  );
+
+  socket.on("mediaStreamIce", (iceCandidate: any) => {
+    if (!isAuthorized(socket, "mediaStreamIce")) {
+      console.error(
+        `${socket.handshake.query.clientType}:${socket.id} is not allowed to mediaStreamIce`
+      );
+      return;
+    }
+
+    console.log(`New Ice candidate received: ${iceCandidate.candidate}`);
+
+    // To all backend ?
+    const backendSocket = backApps.at(0);
+    if (backendSocket) backendSocket.emit("mediaStreamIce", iceCandidate);
+  });
 }
+
+// app.get("/frontendClient.js", function (req, res) {
+//   res.set("Content-Type", "text/javascript");
+//   res.sendFile(__dirname + "/frontendClient.js");
+// });
 
 app.get("/front", (_, res) => {
   res.sendFile(path.join(__dirname, "../public/front.html"));

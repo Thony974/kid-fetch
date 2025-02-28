@@ -1,6 +1,12 @@
 export type DataStatus = "None" | "Ordered" | "Preparing..." | "Done";
 
-export type RequestType = "get" | "update" | "delete";
+export type RequestType =
+  | "get"
+  | "update"
+  | "delete"
+  | "mediaStreamOffer"
+  | "mediaStreamAnswer"
+  | "mediaStreamIce";
 
 //export type ClientType = "front" | "back";
 

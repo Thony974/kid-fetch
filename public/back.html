@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link rel="icon" href="data:," />
     <title>Socket.IO chat</title>
     <style>
       body {
@@ -57,6 +58,7 @@
     </style>
   </head>
   <body>
+    <video id="video" width="640px" height="360px" autoplay></video>
     <ul id="messages"></ul>
     <form id="form" action="">
       <input id="input" autocomplete="off" /><button>Send</button>
@@ -65,9 +67,12 @@
 </html>
 <script src="/socket.io/socket.io.js"></script>
 <script>
-  const socket = io({ query: { clientType: "back" } });
+  const socket = io("https://192.168.1.156:3000", {
+    query: { clientType: "back" },
+  });
   const form = document.getElementById("form");
   const input = document.getElementById("input");
+  const video = document.getElementById("video");
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -109,5 +114,52 @@
   });
   socket.on("delete", (response) => {
     console.log(`Delete response:`, response);
+  });
+
+  // Handle video
+  let webRtcPeerConnection;
+
+  socket.on("mediaStreamIce", ({ candidate }) => {
+    webRtcPeerConnection.addIceCandidate(candidate);
+  });
+  socket.on("mediaStreamOffer", (webRtcSessionDescription) => {
+    console.log(
+      "New rtc offer received from client:",
+      webRtcSessionDescription
+    );
+
+    webRtcPeerConnection = new RTCPeerConnection({
+      iceServers: [],
+    });
+    webRtcPeerConnection.ontrack = ({ streams: [stream] }) => {
+      video.srcObject = stream;
+      video.play();
+    };
+
+    webRtcPeerConnection.setRemoteDescription(
+      new RTCSessionDescription(webRtcSessionDescription),
+      () => {
+        if (webRtcSessionDescription.type === "offer") {
+          webRtcPeerConnection.createAnswer(
+            (anwser) => {
+              webRtcPeerConnection.setLocalDescription(
+                { sdp: anwser.sdp },
+                () => {
+                  socket.emit("mediaStreamAnswer", anwser);
+                },
+                (error) => {
+                  console.error(`Error setting local desc:`, error.message);
+                }
+              );
+            },
+            (error) => console.error(`Error creating answer: ${error.message}`)
+          );
+        } else
+          console.error(
+            `Error creating answer: Received something that is not an offer`
+          );
+      },
+      (error) => console.error(`Error setting remote desc: ${error.message}`)
+    );
   });
 </script>
