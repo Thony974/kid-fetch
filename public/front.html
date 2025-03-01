@@ -128,8 +128,7 @@
     );
   };
 
-  // FIXME: Why received twice ? Force with once for now...
-  socket.once("mediaStreamAnswer", (webRtcSessionDescription) => {
+  socket.on("mediaStreamAnswer", (webRtcSessionDescription) => {
     console.log("New rtc answer received", webRtcSessionDescription);
     webRtcPeerConnection.setRemoteDescription(
       new RTCSessionDescription(webRtcSessionDescription),

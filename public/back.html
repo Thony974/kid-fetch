@@ -70,6 +70,11 @@
   const socket = io("https://192.168.1.156:3000", {
     query: { clientType: "back" },
   });
+
+  const audioNotification = new Audio(
+    "https://192.168.1.156:3000/classic_notif.mp3"
+  );
+
   const form = document.getElementById("form");
   const input = document.getElementById("input");
   const video = document.getElementById("video");
@@ -108,6 +113,7 @@
   });
   socket.on("get", (response) => {
     console.log(`Get response:`, response);
+    audioNotification.play();
   });
   socket.on("update", (response) => {
     console.log(`Update response:`, response);

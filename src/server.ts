@@ -92,8 +92,8 @@ function welcomeNewClient(socket: Socket) {
     }
 
     if (hasData(input)) {
-      socket.emit("get", "success");
       updateStatus(input, "Ordered");
+      io.emit("get", "success");
       io.emit("list", list);
     } else io.emit("get", "error");
   });
@@ -180,32 +180,6 @@ function welcomeNewClient(socket: Socket) {
     }
   );
 
-  socket.on(
-    "mediaStreamAnswer",
-    (webRtcSessionDescription: RTCSessionDescriptionInit) => {
-      if (!isAuthorized(socket, "mediaStreamAnswer")) {
-        console.error(
-          `${socket.handshake.query.clientType}:${socket.id} is not allowed to mediaStreamAnswer`
-        );
-        return;
-      }
-
-      console.log(
-        "New rtc answer received from client:",
-        webRtcSessionDescription.type
-      );
-      console.log(
-        "New rtc answer received from client:",
-        webRtcSessionDescription.sdp
-      );
-
-      // To all backend ?
-      const frontendSocket = frontApps.at(0);
-      if (frontendSocket)
-        frontendSocket.emit("mediaStreamAnswer", webRtcSessionDescription);
-    }
-  );
-
   socket.on("mediaStreamIce", (iceCandidate: any) => {
     if (!isAuthorized(socket, "mediaStreamIce")) {
       console.error(
@@ -226,6 +200,12 @@ function welcomeNewClient(socket: Socket) {
 //   res.set("Content-Type", "text/javascript");
 //   res.sendFile(__dirname + "/frontendClient.js");
 // });
+
+app.use(
+  express.static(path.join(__dirname, "../public/audio"), {
+    maxAge: "1y",
+  })
+);
 
 app.get("/front", (_, res) => {
   res.sendFile(path.join(__dirname, "../public/front.html"));
