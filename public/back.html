@@ -61,7 +61,7 @@
     <video id="video" width="640px" height="360px" autoplay></video>
     <ul id="messages"></ul>
     <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
+      <input id="input" autocomplete="off" /><button>Add</button>
     </form>
   </body>
 </html>
@@ -82,12 +82,12 @@
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     if (input.value) {
-      socket.emit("update", input.value);
+      socket.emit("add", { name: input.value });
       input.value = "";
     }
   });
 
-  socket.on("list", (data) => {
+  socket.on("data", (data) => {
     while (messages.firstChild) messages.removeChild(messages.lastChild);
     for (const element of data) {
       const item = document.createElement("li");
@@ -96,20 +96,23 @@
       const actionItemPrepare = document.createElement("button");
       actionItemPrepare.innerText = "Prepare";
       actionItemPrepare.onclick = () => {
-        socket.emit("update", element.name);
+        socket.emit("update", { name: element.name });
       };
       item.appendChild(actionItemPrepare);
 
       const actionItemDone = document.createElement("button");
       actionItemDone.innerText = "Done";
       actionItemDone.onclick = () => {
-        socket.emit("delete", element.name);
+        socket.emit("delete", { name: element.name });
       };
       item.appendChild(actionItemDone);
 
       messages.appendChild(item);
     }
     window.scrollTo(0, document.body.scrollHeight);
+  });
+  socket.on("add", (response) => {
+    console.log(`Add response:`, response);
   });
   socket.on("get", (response) => {
     console.log(`Get response:`, response);
@@ -121,14 +124,19 @@
   socket.on("delete", (response) => {
     console.log(`Delete response:`, response);
   });
+  socket.on("about-to-close", () => {
+    // TODO: Disabled action buttons and warn
+    alert("Un nouveau client a pris la main...");
+  });
 
   // Handle video
   let webRtcPeerConnection;
 
-  socket.on("mediaStreamIce", ({ candidate }) => {
+  socket.on("rtc-ice-candidate", (candidate) => {
+    console.log("New ice candidate received:", candidate);
     webRtcPeerConnection.addIceCandidate(candidate);
   });
-  socket.on("mediaStreamOffer", (webRtcSessionDescription) => {
+  socket.on("rtc-offer", (webRtcSessionDescription) => {
     console.log(
       "New rtc offer received from client:",
       webRtcSessionDescription
@@ -151,7 +159,7 @@
               webRtcPeerConnection.setLocalDescription(
                 { sdp: anwser.sdp },
                 () => {
-                  socket.emit("mediaStreamAnswer", anwser);
+                  socket.emit("rtc-answer", anwser);
                 },
                 (error) => {
                   console.error(`Error setting local desc:`, error.message);

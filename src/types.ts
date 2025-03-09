@@ -1,14 +1,18 @@
-export type DataStatus = "None" | "Ordered" | "Preparing..." | "Done";
+export type DataStatus = "None" | "Ordered" | "Preparing...";
 
 export type RequestType =
+  | "add"
   | "get"
   | "update"
   | "delete"
-  | "mediaStreamOffer"
-  | "mediaStreamAnswer"
-  | "mediaStreamIce";
+  | "rtc-offer"
+  | "rtc-answer"
+  | "rtc-ice-candidate";
 
-//export type ClientType = "front" | "back";
+export enum ClientType {
+  Front = "front",
+  Back = "back",
+}
 
 export interface Data {
   name: string;
