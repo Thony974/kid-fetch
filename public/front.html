@@ -3,181 +3,21 @@
   <head>
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <link rel="icon" href="data:," />
-    <title>Socket.IO chat</title>
-    <style>
-      body {
-        margin: 0;
-        padding-bottom: 3rem;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif;
-      }
-
-      #form {
-        background: rgba(0, 0, 0, 0.15);
-        padding: 0.25rem;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        display: flex;
-        height: 3rem;
-        box-sizing: border-box;
-        backdrop-filter: blur(10px);
-      }
-      #input {
-        border: none;
-        padding: 0 1rem;
-        flex-grow: 1;
-        border-radius: 2rem;
-        margin: 0.25rem;
-      }
-      #input:focus {
-        outline: none;
-      }
-      #form > button {
-        background: #333;
-        border: none;
-        padding: 0 1rem;
-        margin: 0.25rem;
-        border-radius: 3px;
-        outline: none;
-        color: #fff;
-      }
-
-      #messages {
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-      }
-      #messages > li {
-        padding: 0.5rem 1rem;
-      }
-      #messages > li:nth-child(odd) {
-        background: #efefef;
-      }
-    </style>
+    <title>EME Parents</title>
+    <link rel="stylesheet" type="text/css" href="./css/front.css" />
   </head>
   <body>
     <video id="video" width="640px" height="360px" autoplay></video>
+    <h2 id="titleList">Je viens recupérer...</h2>
     <ul id="messages"></ul>
     <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
+      <input
+        id="input"
+        autocomplete="off"
+        placeholder="Ajouter le prénom d'un enfant si non présent dans la liste..."
+      /><button>Ajouter</button>
     </form>
   </body>
 </html>
-<!-- <script src="/frontendClient.js"></script> -->
 <script src="/socket.io/socket.io.js"></script>
-<script>
-  const socket = io("https://192.168.1.156:3000", {
-    query: { clientType: "front" },
-  });
-  const form = document.getElementById("form");
-  const input = document.getElementById("input");
-  const video = document.getElementById("video");
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    if (input.value) {
-      socket.emit("add", { name: input.value });
-      input.value = "";
-    }
-  });
-
-  socket.on("data", (data) => {
-    while (messages.firstChild) messages.removeChild(messages.lastChild);
-    for (const element of data) {
-      const item = document.createElement("li");
-      item.textContent = `${element.name} [${element.status}]  `;
-
-      const actionItem = document.createElement("button");
-      actionItem.innerText = "Order";
-      actionItem.onclick = () => {
-        socket.emit("get", { name: element.name });
-      };
-      item.appendChild(actionItem);
-
-      messages.appendChild(item);
-    }
-    window.scrollTo(0, document.body.scrollHeight);
-  });
-  socket.on("add", (response) => {
-    console.log(`Add response:`, response);
-  });
-  socket.on("get", (response) => {
-    console.log(`Get response:`, response);
-  });
-  socket.on("about-to-close", () => {
-    // TODO: Disabled action buttons and warn
-    alert("Un nouveau client a pris la main...");
-  });
-
-  // Handle video
-  const webRtcPeerConnection = new RTCPeerConnection({
-    iceServers: [],
-  });
-  webRtcPeerConnection.onicecandidate = (ice) => {
-    socket.emit("rtc-ice-candidate", ice.candidate);
-  };
-  webRtcPeerConnection.onnegotiationneeded = () => {
-    webRtcPeerConnection.createOffer(
-      (offer) => {
-        webRtcPeerConnection.setLocalDescription(
-          { sdp: offer.sdp },
-          () => {
-            socket.emit("rtc-offer", offer);
-          },
-          (error) => {
-            console.error(`Error setting local desc:`, error.message);
-          }
-        );
-      },
-      (error) => console.error(`Error creating offer: ${error.message}`)
-    );
-  };
-
-  socket.on("trigger-stream", (webRtcSessionDescription) => {
-    // TODO: Factorize with onnegotiationneeded
-    // webRtcPeerConnection.restartIce();
-    // webRtcPeerConnection.createOffer(
-    //   (offer) => {
-    //     webRtcPeerConnection.setLocalDescription(
-    //       { sdp: offer.sdp },
-    //       () => {
-    //         socket.emit("rtc-offer", offer);
-    //       },
-    //       (error) => {
-    //         console.error(`Error setting local desc:`, error.message);
-    //       }
-    //     );
-    //   },
-    //   (error) => console.error(`Error creating offer: ${error.message}`),
-    //   { iceRestart: true }
-    // );
-    //TODO: remove track and re attach new ones
-
-    // Brut force for now...
-    window.location.reload();
-  });
-
-  socket.on("rtc-answer", (webRtcSessionDescription) => {
-    console.log("New rtc answer received", webRtcSessionDescription);
-    webRtcPeerConnection.setRemoteDescription(
-      new RTCSessionDescription(webRtcSessionDescription),
-      () => console.log("Remote description set"),
-      (error) => console.error("Error setting remote desc:", error.message)
-    );
-  });
-
-  navigator.mediaDevices
-    .getUserMedia({ audio: false, video: { width: 1280, height: 720 } })
-    .then((stream) => {
-      video.srcObject = stream;
-      video.play();
-      stream
-        .getTracks()
-        .forEach((track) => webRtcPeerConnection.addTrack(track, stream));
-    })
-    .catch((error) => {
-      console.error("Error getting user media:", error);
-    });
-</script>
+<script type="module" src="./scripts/frontendClient.js"></script>

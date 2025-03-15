@@ -1,4 +1,4 @@
-export type DataStatus = "None" | "Ordered" | "Preparing...";
+export type DataStatus = "none" | "ordered" | "preparing";
 
 export type RequestType =
   | "add"

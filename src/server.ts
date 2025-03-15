@@ -11,8 +11,8 @@ import SocketHandler from "./SocketHandler";
 const app = express();
 const server = createServer(
   {
-    cert: fs.readFileSync("./ssl/cert.pem"),
-    key: fs.readFileSync("./ssl/key.pem"),
+    cert: fs.readFileSync(path.join(__dirname, "../ssl/cert.pem")),
+    key: fs.readFileSync(path.join(__dirname, "../ssl/key.pem")),
   },
   app
 );
@@ -20,14 +20,9 @@ const io = new Server(server);
 const pendingData = new PendingData();
 const socketHandler = new SocketHandler(io, pendingData);
 
-// app.get("/frontendClient.js", function (req, res) {
-//   res.set("Content-Type", "text/javascript");
-//   res.sendFile(__dirname + "/frontendClient.js");
-// });
-
 app.use(
-  express.static(path.join(__dirname, "../public/audio"), {
-    maxAge: "1y",
+  express.static(path.join(__dirname, "../public"), {
+    maxAge: "0", //"1y",
   })
 );
 

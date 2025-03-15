@@ -5,13 +5,13 @@ import { Data, DataStatus } from "./types";
 import JsonDataStorage, { IDataStorage } from "./DataStorage";
 
 const jsonStorageFilePath = path.join(__dirname, "../data/list.json");
-const defaultStatus: DataStatus = "None";
+const defaultStatus: DataStatus = "none";
 
 export default class PendingData extends EventEmitter {
   private items: Data[];
   private dataStorage: IDataStorage;
 
-  constructor(itemsChangedListener?: (data: Data[]) => void) {
+  constructor() {
     super();
     this.dataStorage = new JsonDataStorage(jsonStorageFilePath);
     this.items = this.dataStorage.load();

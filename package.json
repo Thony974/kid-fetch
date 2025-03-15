@@ -4,19 +4,31 @@
   "description": "Server application to get back child to home",
   "main": "dist/server.js",
   "scripts": {
-    "start": "tsc && node dist/server.js",
+    "build": "tsc",
+    "clean": "rimraf dist",
+    "dev": "npm run clean && npm run build && cross-env NODE_ENV=development node dist/server.js",
+    "start": "cross-env NODE_ENV=production node dist/server.js",
+    "generate-https-cert": "openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./ssl/key.pem -out ./ssl/cert.pem -config ./ssl/conf",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "amosdine",
   "license": "ISC",
+  "files": [
+    "dist",
+    "public",
+    "data",
+    "ssl",
+    "tsconfig.json"
+  ],
   "devDependencies": {
     "@types/express": "^5.0.0",
+    "cross-env": "^7.0.3",
+    "rimraf": "^6.0.1",
     "typescript": "^5.7.3"
   },
   "dependencies": {
     "@types/node": "^22.13.1",
     "express": "^4.21.2",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io": "^4.8.1"
   }
 }

@@ -128,7 +128,7 @@ export default class SocketHandler {
       return;
     }
 
-    this.pendingData.update(name, "Ordered");
+    this.pendingData.update(name, "ordered");
     this.io.emit("get", RequestSuccess);
   }
 
@@ -144,7 +144,7 @@ export default class SocketHandler {
     }
 
     socket.emit("update", RequestSuccess);
-    this.pendingData.update(name, "Preparing...");
+    this.pendingData.update(name, "preparing");
   }
 
   private onRemoveData(socket: Socket, name: string) {
