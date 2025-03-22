@@ -1,11 +1,12 @@
 import { Socket, Server } from "socket.io";
 
-import { ClientType, Data, RequestType } from "./types";
+import { ClientType, Data, DataStatus, RequestType } from "./types";
 import PendingData from "./PendingData";
 
 const frontRequestsAuthorized: RequestType[] = [
   "add",
   "get",
+  "cancel",
   "rtc-offer",
   "rtc-ice-candidate",
 ];
@@ -49,6 +50,7 @@ export default class SocketHandler {
     // Data handling
     socket.on("add", ({ name }) => this.onAddData(socket, name));
     socket.on("get", ({ name }) => this.onGetData(socket, name));
+    socket.on("cancel", ({ name }) => this.onCancel(socket, name));
     socket.on("update", ({ name }) => this.onUpdateData(socket, name));
     socket.on("delete", ({ name }) => this.onRemoveData(socket, name));
 
@@ -109,22 +111,27 @@ export default class SocketHandler {
 
   private onAddData(socket: Socket, name: string) {
     if (!this.isSocketAuthorizedToRequest(socket, "add")) {
-      this.io.emit("add", RequestFailure("Unauthorized request"));
+      socket.emit("add", RequestFailure("Unauthorized request"));
+      return;
+    }
+
+    if (this.pendingData.has(name)) {
+      socket.emit("add", RequestFailure(`${name} already exists`));
       return;
     }
 
     this.pendingData.add(name);
-    this.io.emit("add", RequestSuccess);
+    socket.emit("add", RequestSuccess);
   }
 
   private onGetData(socket: Socket, name: string) {
     if (!this.isSocketAuthorizedToRequest(socket, "get")) {
-      this.io.emit("get", RequestFailure("Unauthorized request"));
+      socket.emit("get", RequestFailure("Unauthorized request"));
       return;
     }
 
     if (!this.pendingData.has(name)) {
-      this.io.emit("get", RequestFailure(`${name} not exists`));
+      socket.emit("get", RequestFailure(`${name} not exists`));
       return;
     }
 
@@ -132,14 +139,29 @@ export default class SocketHandler {
     this.io.emit("get", RequestSuccess);
   }
 
-  private onUpdateData(socket: Socket, name: string) {
-    if (!this.isSocketAuthorizedToRequest(socket, "update")) {
-      this.io.emit("update", RequestFailure("Unauthorized request"));
+  private onCancel(socket: Socket, name: string) {
+    if (!this.isSocketAuthorizedToRequest(socket, "cancel")) {
+      socket.emit("cancel", RequestFailure("Unauthorized request"));
       return;
     }
 
     if (!this.pendingData.has(name)) {
-      this.io.emit("update", RequestFailure(`${name} not exists`));
+      socket.emit("cancel", RequestFailure(`${name} not exists`));
+      return;
+    }
+
+    this.pendingData.update(name, "none");
+    socket.emit("cancel", RequestSuccess);
+  }
+
+  private onUpdateData(socket: Socket, name: string) {
+    if (!this.isSocketAuthorizedToRequest(socket, "update")) {
+      socket.emit("update", RequestFailure("Unauthorized request"));
+      return;
+    }
+
+    if (!this.pendingData.has(name)) {
+      socket.emit("update", RequestFailure(`${name} not exists`));
       return;
     }
 
@@ -149,12 +171,12 @@ export default class SocketHandler {
 
   private onRemoveData(socket: Socket, name: string) {
     if (!this.isSocketAuthorizedToRequest(socket, "delete")) {
-      this.io.emit("delete", RequestFailure("Unauthorized request"));
+      socket.emit("delete", RequestFailure("Unauthorized request"));
       return;
     }
 
     if (!this.pendingData.has(name)) {
-      this.io.emit("delete", RequestFailure(`${name} not exists`));
+      socket.emit("delete", RequestFailure(`${name} not exists`));
       return;
     }
 

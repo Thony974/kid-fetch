@@ -1,4 +1,4 @@
-import { getText } from "./common.js";
+import { getText, sortDataByStatus } from "./common.js";
 
 const socket = io("https://192.168.1.156:3000", {
   query: { clientType: "front" },
@@ -16,8 +16,16 @@ form.addEventListener("submit", (e) => {
   }
 });
 
-socket.on("data", (data) => {
+const cleanData = () => {
   while (messages.firstChild) messages.removeChild(messages.lastChild);
+};
+
+const updateList = (data) => {
+  cleanData();
+
+  sortDataByStatus(data, ["preparing", "ordered", "none"]);
+
+  // Create new <ul></ul> children
   for (const element of data) {
     const item = document.createElement("li");
     const status = getText(element.status);
@@ -26,6 +34,7 @@ socket.on("data", (data) => {
     const callActionItem = document.createElement("button");
     callActionItem.style = "font-weight: bold";
     callActionItem.innerText = getText("call");
+    callActionItem.disabled = element.status === "preparing";
     callActionItem.onclick = () => {
       socket.emit("get", { name: element.name });
     };
@@ -33,22 +42,29 @@ socket.on("data", (data) => {
 
     const cancelActionItem = document.createElement("button");
     cancelActionItem.style = "font-weight: bold";
-    cancelActionItem.disabled = true; // TODO
     cancelActionItem.innerText = getText("cancel");
+    cancelActionItem.disabled = element.status !== "ordered";
     cancelActionItem.onclick = () => {
-      // TODO
+      socket.emit("cancel", { name: element.name });
     };
     item.appendChild(cancelActionItem);
 
     messages.appendChild(item);
   }
   window.scrollTo(0, document.body.scrollHeight);
+};
+
+socket.on("data", (data) => {
+  updateList(data);
 });
 socket.on("add", (response) => {
   console.log(`Add response:`, response);
 });
 socket.on("get", (response) => {
   console.log(`Get response:`, response);
+});
+socket.on("cancel", (response) => {
+  console.log(`Cancel response:`, response);
 });
 socket.on("about-to-close", () => {
   // TODO: Disabled action buttons and warn

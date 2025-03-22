@@ -40,9 +40,9 @@ export default class PendingData extends EventEmitter {
   }
 
   update(name: string, status: DataStatus) {
-    for (const element of this.items) {
-      if (element.name === name) {
-        element.status = status;
+    for (const item of this.items) {
+      if (item.name === name) {
+        item.status = status;
         break;
       }
     }

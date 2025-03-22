@@ -1,4 +1,4 @@
-import { getText } from "./common.js";
+import { getText, sortDataByStatus } from "./common.js";
 
 const socket = io("https://192.168.1.156:3000", {
   query: { clientType: "back" },
@@ -21,8 +21,16 @@ form.addEventListener("submit", (e) => {
   }
 });
 
-socket.on("data", (data) => {
+const cleanData = () => {
   while (messages.firstChild) messages.removeChild(messages.lastChild);
+};
+
+const updateList = (data) => {
+  cleanData();
+
+  sortDataByStatus(data, ["ordered", "preparing", "none"]);
+
+  // Create new <ul></ul> children
   for (const element of data) {
     const item = document.createElement("li");
     const status = getText(element.status);
@@ -47,6 +55,10 @@ socket.on("data", (data) => {
     messages.appendChild(item);
   }
   window.scrollTo(0, document.body.scrollHeight);
+};
+
+socket.on("data", (data) => {
+  updateList(data);
 });
 socket.on("add", (response) => {
   console.log(`Add response:`, response);

@@ -4,6 +4,7 @@ export type RequestType =
   | "add"
   | "get"
   | "update"
+  | "cancel"
   | "delete"
   | "rtc-offer"
   | "rtc-answer"
