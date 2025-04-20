@@ -2,11 +2,14 @@ import fs from "fs";
 import path from "path";
 import { createServer } from "https";
 
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import { Server } from "socket.io";
 
 import PendingData from "./PendingData";
 import SocketHandler from "./SocketHandler";
+
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 const server = createServer(
@@ -20,9 +23,33 @@ const io = new Server(server);
 const pendingData = new PendingData();
 const socketHandler = new SocketHandler(io, pendingData);
 
+function authenticate(req: Request, res: Response, next: NextFunction) {
+  const authHeaders = req.headers.authorization;
+  console.log("authHeaders: ", authHeaders);
+
+  if (!authHeaders) {
+    let error = new Error("Unauthorized access");
+    res.setHeader("WWW-Authenticate", "Basic");
+    res.status(401).send(error.message);
+    return next(error);
+  }
+
+  const auth = authHeaders.split(" ")[1];
+  if (auth !== process.env.ACCESS_TOKEN) {
+    let error = new Error("Invalid credentials");
+    res.setHeader("WWW-Authenticate", "Basic");
+    res.status(401).send(error.message);
+    return next(error);
+  }
+
+  next();
+}
+
+app.use(authenticate);
+
 app.use(
   express.static(path.join(__dirname, "../public"), {
-    maxAge: "0", //"1y",
+    maxAge: "1y",
   })
 );
 

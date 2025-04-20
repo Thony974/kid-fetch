@@ -1,10 +1,17 @@
 # kid-fetch
 
-Application to fetch your kid after school as a command order
+Application to fetch your kid after school as a command order.
 
-# Install
+# Deploy
 
 npm pack
 
+# Install
+
+export ACCESS_TOKEN="xxx"
+echo $ACCESS_TOKEN
 npm install
+
+# Run
+
 npm run start
