@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>EME Enseignants</title>
+    <link rel="stylesheet" type="text/css" href="./css/back.css" />
+  </head>
+  <body>
+    <video id="video" width="640px" height="360px" autoplay></video>
+    <h2 id="titleList">Appels en cours:</h2>
+    <ul id="messages"></ul>
+    <form id="form" action="">
+      <input
+        id="input"
+        autocomplete="off"
+        placeholder="Ajouter le prénom d'un enfant si non présent dans la liste..."
+      /><button>Ajouter</button>
+    </form>
+  </body>
+</html>
+<script src="/socket.io/socket.io.js"></script>
+<script type="module" src="./scripts/backendClient.js"></script>
