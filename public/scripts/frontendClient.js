@@ -1,6 +1,6 @@
 import { getText, sortDataByStatus } from "./common.js";
 
-const socket = io("https://192.168.1.156:3000", {
+const socket = io("https://192.168.2.154:3000", {
   query: { clientType: "front" },
 });
 const form = document.getElementById("form");

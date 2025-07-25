@@ -1,11 +1,11 @@
 import { getText, sortDataByStatus } from "./common.js";
 
-const socket = io("https://192.168.1.156:3000", {
+const socket = io("https://192.168.2.154:3000", {
   query: { clientType: "back" },
 });
 
 const audioNotification = new Audio(
-  "https://192.168.1.156:3000/audio/classic_notif.mp3"
+  "https://192.168.2.154:3000/audio/classic_notif.mp3"
 );
 
 const form = document.getElementById("form");
