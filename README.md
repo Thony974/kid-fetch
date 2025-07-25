@@ -20,7 +20,7 @@ echo $ACCESS_TOKEN
 npm install
 ```
 
-## ⚠️ Https certificate depends on server IP and should be regenerated if changed using:
+## ⚠️ Https certificate depends on server IP and should be regenerated:
 
 ```bash
 npm run generate-https-cert

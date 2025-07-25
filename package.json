@@ -1,6 +1,6 @@
 {
   "name": "kid-fetch",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Server application to get back child to home",
   "main": "dist/server.js",
   "scripts": {
